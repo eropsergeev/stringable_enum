@@ -6,7 +6,7 @@
 #include <cinttypes>
 #include <limits>
 
-namespace stringable_enum {
+namespace stringable_enum::detail {
 
 template<size_t N>
 struct EnumOptions {
@@ -17,7 +17,7 @@ struct EnumOptions {
     std::array<Seg, N> segs{};
     uint16_t count = 0;
     std::array<char, N> data{};
-    consteval EnumOptions(const char (&s)[N]) {
+    constexpr EnumOptions(const char (&s)[N]) {
         static_assert(N <= (size_t) std::numeric_limits<uint16_t>::max());
         uint16_t pos = 0;
         bool in_name = 0, in_value = 0;
@@ -67,28 +67,20 @@ struct EnumOptions {
     }
 };
 
-template<EnumOptions opts>
-consteval auto operator ""_enum_to_string_func() {
-    return [](auto e) {
-        for (uint16_t i = 0; i < opts.count; ++i) {
-            auto [l, r, v] = opts.segs[i];
-            if (e == static_cast<decltype(e)>(v))
-                return std::string_view(opts.data.begin() + l, opts.data.begin() + r);
-        }
-        return std::string_view("");
-    };
-}
-
 }; // namespace stringable_enum
 
-#define ENUM(Name, ...) enum Name { __VA_ARGS__ }; auto to_string(Name e) { \
-    using namespace stringable_enum; \
-    return (#__VA_ARGS__ ""_enum_to_string_func)(e); \
+#define ENUM_TYPE(type, Name, ...) type Name { __VA_ARGS__ }; std::string_view to_string(Name e) { \
+    static constexpr stringable_enum::detail::EnumOptions opts(#__VA_ARGS__); \
+    for (uint16_t i = 0; i < opts.count; ++i) { \
+        auto [l, r, v] = opts.segs[i]; \
+        if (e == static_cast<decltype(e)>(v)) \
+            return std::string_view(opts.data.begin() + l, r - l); \
+    } \
+    return ""; \
 }
 
-#define ENUM_CLASS(Name, ...) enum class Name { __VA_ARGS__ }; auto to_string(Name e) { \
-    using namespace stringable_enum; \
-    return (#__VA_ARGS__ ""_enum_to_string_func)(e); \
-}
+#define ENUM(Name, ...) ENUM_TYPE(enum, Name, __VA_ARGS__)
+
+#define ENUM_CLASS(Name, ...) ENUM_TYPE(enum class, Name, __VA_ARGS__)
 
 #endif

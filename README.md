@@ -1,4 +1,4 @@
-C++20 stringable enum
+C++17 stringable enum
 ===================
 Small library that lets create enums that automatically convertable to string.
 
