@@ -69,7 +69,7 @@ struct EnumOptions {
 
 }; // namespace stringable_enum
 
-#define ENUM_TYPE(type, Name, ...) type Name { __VA_ARGS__ }; std::string_view to_string(Name e) { \
+#define ENUM_TYPE(type, Name, ...) type Name { __VA_ARGS__ }; inline std::string_view to_string(Name e) { \
     static constexpr stringable_enum::detail::EnumOptions opts(#__VA_ARGS__); \
     for (uint16_t i = 0; i < opts.count; ++i) { \
         auto [l, r, v] = opts.segs[i]; \
