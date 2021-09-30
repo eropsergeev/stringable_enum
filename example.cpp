@@ -2,7 +2,8 @@
 #include "stringable_enum.hpp"
 
 namespace A {
-    ENUM(Color, int, RED = 1, GREEN, BLUE = 42, NONE = -1)
+    ENUM_CLASS(Color, int, RED = 1, GREEN, BLUE = 42, NONE = -1)
+    ENUM_CLASS(Foo, int, BAR, BAZ)
 };
 
 int main() {
@@ -10,7 +11,7 @@ int main() {
     std::cout << to_string(A::Color::RED) << "\n";
     std::cout << to_string(A::Color::GREEN) << "\n";
     std::cout << to_string(A::Color::BLUE) << "\n";
-    for (auto x : enum_values<A::Color>) {
+    for (auto x : EnumValues<A::Color>::list) {
         std::cout << to_string(static_cast<A::Color>(x)) << " ";
     }
     std::cout << "\n";

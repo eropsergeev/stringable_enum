@@ -80,7 +80,7 @@ namespace stringable_enum { \
         } \
         return ""; \
     } \
-    template<class> struct EnumValues {}; \
+    template<class> struct EnumValues; \
     template<> \
     struct EnumValues<Name> { \
         static constexpr auto opts = ::stringable_enum::detail::EnumOptions(#__VA_ARGS__, BaseType{}); \
@@ -88,8 +88,6 @@ namespace stringable_enum { \
             return std::array<BaseType, opts.count> {opts.segs[i].v...}; \
         }(std::make_index_sequence<opts.count>{}); \
     }; \
-    template<class T> \
-    constexpr auto enum_values = EnumValues<T>::list; \
 };
 
 #define ENUM(Name, BaseType, ...) ENUM_TYPE(enum, Name, BaseType, __VA_ARGS__)
