@@ -8,21 +8,21 @@
 
 namespace stringable_enum::detail {
 
-template<size_t N>
+template<class BaseType, size_t N>
 struct EnumOptions {
     struct Seg {
         uint16_t l, r;
-        int v;
+        BaseType v;
     };
     std::array<Seg, N> segs{};
     uint16_t count = 0;
     std::array<char, N> data{};
-    constexpr EnumOptions(const char (&s)[N]) {
+    constexpr EnumOptions(const char (&s)[N], BaseType) {
         static_assert(N <= (size_t) std::numeric_limits<uint16_t>::max());
         uint16_t pos = 0;
         bool in_name = 0, in_value = 0;
         uint16_t name_start = 0;
-        int val = 0;
+        BaseType val = 0;
         bool minus = 0;
         while (s[pos]) {
             data[pos] = s[pos];
@@ -67,20 +67,32 @@ struct EnumOptions {
     }
 };
 
-}; // namespace stringable_enum
+}; // namespace stringable_enum::detail
 
-#define ENUM_TYPE(type, Name, ...) type Name { __VA_ARGS__ }; inline std::string_view to_string(Name e) { \
-    static constexpr stringable_enum::detail::EnumOptions opts(#__VA_ARGS__); \
-    for (uint16_t i = 0; i < opts.count; ++i) { \
-        auto [l, r, v] = opts.segs[i]; \
-        if (e == static_cast<decltype(e)>(v)) \
-            return std::string_view(opts.data.begin() + l, r - l); \
+#define ENUM_TYPE(kind, Name, BaseType, ...) kind Name { __VA_ARGS__ }; \
+namespace stringable_enum { \
+    inline std::string_view to_string(Name e) { \
+        static constexpr ::stringable_enum::detail::EnumOptions opts(#__VA_ARGS__, BaseType{}); \
+        for (uint16_t i = 0; i < opts.count; ++i) { \
+            auto [l, r, v] = opts.segs[i]; \
+            if (e == static_cast<decltype(e)>(v)) \
+                return std::string_view(opts.data.begin() + l, r - l); \
+        } \
+        return ""; \
     } \
-    return ""; \
-}
+    template<class> struct EnumValues {}; \
+    template<> \
+    struct EnumValues<Name> { \
+        static constexpr auto opts = ::stringable_enum::detail::EnumOptions(#__VA_ARGS__, BaseType{}); \
+        static constexpr auto list = []<size_t... i>(std::index_sequence<i...>) { \
+            return std::array<BaseType, opts.count> {opts.segs[i].v...}; \
+        }(std::make_index_sequence<opts.count>{}); \
+    }; \
+    template<class T> \
+    constexpr auto enum_values = EnumValues<T>::list; \
+};
 
-#define ENUM(Name, ...) ENUM_TYPE(enum, Name, __VA_ARGS__)
-
-#define ENUM_CLASS(Name, ...) ENUM_TYPE(enum class, Name, __VA_ARGS__)
+#define ENUM(Name, BaseType, ...) ENUM_TYPE(enum, Name, BaseType, __VA_ARGS__)
+#define ENUM_CLASS(Name, BaseType, ...) ENUM_TYPE(enum class, Name, BaseType, __VA_ARGS__)
 
 #endif
