@@ -85,7 +85,7 @@ namespace stringable_enum { \
     struct EnumValues<Name> { \
         static constexpr auto opts = ::stringable_enum::detail::EnumOptions(#__VA_ARGS__, BaseType{}); \
         static constexpr auto list = []<size_t... i>(std::index_sequence<i...>) { \
-            return std::array<BaseType, opts.count> {opts.segs[i].v...}; \
+            return std::array<Name, opts.count> {(Name) opts.segs[i].v...}; \
         }(std::make_index_sequence<opts.count>{}); \
     }; \
 };

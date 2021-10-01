@@ -12,7 +12,7 @@ int main() {
     std::cout << to_string(A::Color::GREEN) << "\n";
     std::cout << to_string(A::Color::BLUE) << "\n";
     for (auto x : EnumValues<A::Color>::list) {
-        std::cout << to_string(static_cast<A::Color>(x)) << " ";
+        std::cout << to_string(x) << " ";
     }
     std::cout << "\n";
 }
